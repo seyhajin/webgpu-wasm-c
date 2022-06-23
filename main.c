@@ -220,6 +220,7 @@ int main(int argc, const char* argv[]) {
         
     });
 
+    wgpuBindGroupLayoutRelease(bindgroup_layout);
     wgpuPipelineLayoutRelease(pipeline_layout);
     wgpuShaderModuleRelease(vs_triangle);
     wgpuShaderModuleRelease(fs_triangle);
@@ -246,7 +247,7 @@ int main(int argc, const char* argv[]) {
     // create the uniform bind group
     state.res.ubuffer = create_buffer(&state.var.rot, sizeof(state.var.rot), WGPUBufferUsage_Uniform);
     state.res.bindgroup = wgpuDeviceCreateBindGroup(state.wgpu.device, &(WGPUBindGroupDescriptor){
-        .layout = bindgroup_layout,
+        .layout = wgpuRenderPipelineGetBindGroupLayout(state.wgpu.pipeline, 0),
         .entryCount = 1,
         // bind group entry
         .entries = &(WGPUBindGroupEntry){
@@ -256,7 +257,6 @@ int main(int argc, const char* argv[]) {
             .size = sizeof(state.var.rot),
         },
     });
-    wgpuBindGroupLayoutRelease(bindgroup_layout);
 
     //-----------------
     // main loop
