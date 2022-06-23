@@ -1,0 +1,8 @@
+
+.vscode/*
+medias/*
+publish/*
+
+webgpu.html
+webgpu.js
+webgpu.wasm
