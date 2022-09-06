@@ -77,7 +77,7 @@ static const char* wgsl_vs_triangle = CODE(
         @location(0) degs : f32,
     };
     @group(0) @binding(0) var<uniform> uRot : Rotation;
-    @stage(vertex)
+    @vertex
     fn main(input : VertexIn) -> VertexOut {
         var rads : f32 = radians(uRot.degs);
         var cosA : f32 = cos(rads);
@@ -95,7 +95,7 @@ static const char* wgsl_vs_triangle = CODE(
 
 // fragment shader
 static const char* wgsl_fs_triangle = CODE(
-    @stage(fragment)
+    @fragment
     fn main(@location(0) vCol : vec3<f32>) -> @location(0) vec4<f32> {
         return vec4<f32>(vCol, 1.0);
     }
