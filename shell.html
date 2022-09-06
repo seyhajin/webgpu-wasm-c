@@ -25,12 +25,38 @@
             })(),
         };
 
-        getDevice = async () => {
+        initWebGPU = async () => {
+            // Check to ensure the user agent supports WebGPU
+            if (!('gpu' in navigator)) {
+                console.error("User agent doesn't support WebGPU.");
+                return false;
+            }
+
+            // Request an adapter
             const adapter = await navigator.gpu.requestAdapter();
-            const device = await adapter.requestDevice();
-        Module.preinitializedWebGPUDevice = device;
+            if (!adapter) {
+                console.log('No WebGPU adapters found.');
+                return false;
+            }
+
+            // Request a device
+            const device  = await adapter.requestDevice();
+            device.lost.then((info) => {
+                console.log(`WebGPU device was lost: ${info.message}`);
+                device = null;
+
+                if (info.reason != 'destroyed') {
+                    initWebGPU();
+                }
+            });
+
+            // Set WebGPU device in Module
+            Module.preinitializedWebGPUDevice = device;
+
+            return true;
         }
-        getDevice();
+
+        initWebGPU();
     </script>
     {{{ SCRIPT }}}
 </body>
