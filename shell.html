@@ -28,21 +28,30 @@
         initWebGPU = async () => {
             // Check to ensure the user agent supports WebGPU
             if (!('gpu' in navigator)) {
-                console.error("User agent doesn't support WebGPU.");
+                const msg = '⚠️ WebGPU is not available on this browser.';
+
+                const pre = document.createElement('pre');
+                pre.style.color = '#f00';
+                pre.style.textAlign = 'center';
+                pre.textContent = msg;
+                document.body.appendChild(pre);
+
+                console.error(msg);
+
                 return false;
             }
 
             // Request an adapter
             const adapter = await navigator.gpu.requestAdapter();
             if (!adapter) {
-                console.log('No WebGPU adapters found.');
+                console.error('No WebGPU adapters found.');
                 return false;
             }
 
             // Request a device
             const device  = await adapter.requestDevice();
             device.lost.then((info) => {
-                console.log(`WebGPU device was lost: ${info.message}`);
+                console.error(`WebGPU device was lost: ${info.message}`);
                 device = null;
 
                 if (info.reason != 'destroyed') {
