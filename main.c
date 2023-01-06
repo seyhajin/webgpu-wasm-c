@@ -63,8 +63,10 @@ static WGPUBuffer       create_buffer(const void* data, size_t size, WGPUBufferU
 // vertex and fragment shaders
 //--------------------------------------------------
 
-// vertex shader
-static const char* wgsl_vs_triangle = CODE(
+// triangle shader
+static const char* wgsl_triangle = CODE(
+    // attribute/uniform decls
+
     struct VertexIn {
         @location(0) aPos : vec2<f32>,
         @location(1) aCol : vec3<f32>,
@@ -77,8 +79,11 @@ static const char* wgsl_vs_triangle = CODE(
         @location(0) degs : f32,
     };
     @group(0) @binding(0) var<uniform> uRot : Rotation;
+
+    // vertex shader
+
     @vertex
-    fn main(input : VertexIn) -> VertexOut {
+    fn vs_main(input : VertexIn) -> VertexOut {
         var rads : f32 = radians(uRot.degs);
         var cosA : f32 = cos(rads);
         var sinA : f32 = sin(rads);
@@ -91,15 +96,15 @@ static const char* wgsl_vs_triangle = CODE(
         output.vCol = input.aCol;
         return output;
     }
-);
 
-// fragment shader
-static const char* wgsl_fs_triangle = CODE(
+    // fragment shader
+
     @fragment
-    fn main(@location(0) vCol : vec3<f32>) -> @location(0) vec4<f32> {
+    fn fs_main(@location(0) vCol : vec3<f32>) -> @location(0) vec4<f32> {
         return vec4<f32>(vCol, 1.0);
     }
 );
+
 
 //--------------------------------------------------
 //
@@ -125,8 +130,7 @@ int main(int argc, const char* argv[]) {
     //-----------------
 
     // compile shaders
-    WGPUShaderModule vs_triangle = create_shader(wgsl_vs_triangle, NULL);
-    WGPUShaderModule fs_triangle = create_shader(wgsl_fs_triangle, NULL);
+    WGPUShaderModule shader_triangle = create_shader(wgsl_triangle, NULL);
 
     // describe buffer layouts
     WGPUVertexAttribute vertex_attrib[2] = {
@@ -173,8 +177,8 @@ int main(int argc, const char* argv[]) {
         .layout = pipeline_layout,
         // vertex state
         .vertex = {
-            .module = vs_triangle,
-            .entryPoint = "main",
+            .module = shader_triangle,
+            .entryPoint = "vs_main",
             .bufferCount = 1,
             .buffers = &vertex_buffer_layout,
         },
@@ -187,8 +191,8 @@ int main(int argc, const char* argv[]) {
         },
         // fragment state
         .fragment = &(WGPUFragmentState){
-            .module = fs_triangle,
-            .entryPoint = "main",
+            .module = shader_triangle,
+            .entryPoint = "fs_main",
             .targetCount = 1,
             // color target state
             .targets = &(WGPUColorTargetState){
@@ -222,8 +226,7 @@ int main(int argc, const char* argv[]) {
 
     wgpuBindGroupLayoutRelease(bindgroup_layout);
     wgpuPipelineLayoutRelease(pipeline_layout);
-    wgpuShaderModuleRelease(vs_triangle);
-    wgpuShaderModuleRelease(fs_triangle);
+    wgpuShaderModuleRelease(shader_triangle);
 
     //-----------------
     // setup
