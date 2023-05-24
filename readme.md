@@ -1,9 +1,12 @@
+
 <div align="center">
 <h1>webgpu-wasm-c</h1>
 
 <p>A minimal WebGPU 3d example written in C, compiled to WebAssembly (wasm).</p>
 
 <img src="screen.png"/>
+  
+![👁️](https://views.whatilearened.today/views/github/seyhajin/webgpu-wasm-c.svg)
 
 </div>
 
@@ -54,3 +57,4 @@ e.g. : launch `python3 -m http.server` and open web browser to `localhost:8000`.
 * [emscripten](https://emscripten.org)
 * git (optional)
 * python3 (optional)
+
