@@ -25,6 +25,7 @@ typedef struct state_t {
 
     // wgpu
     struct {
+        WGPUInstance instance;
         WGPUDevice device;
         WGPUQueue queue;
         WGPUSwapChain swapchain;
@@ -119,6 +120,7 @@ int main(int argc, const char* argv[]) {
     // init
     //-----------------
     state.canvas.name = "canvas";
+    state.wgpu.instance = wgpuCreateInstance(NULL);
     state.wgpu.device = emscripten_webgpu_get_device();
     state.wgpu.queue = wgpuDeviceGetQueue(state.wgpu.device);
 
@@ -275,6 +277,7 @@ int main(int argc, const char* argv[]) {
     wgpuSwapChainRelease(state.wgpu.swapchain);
     wgpuQueueRelease(state.wgpu.queue);
     wgpuDeviceRelease(state.wgpu.device);
+    wgpuInstanceRelease(state.wgpu.instance);
 
     return 0;
 }
@@ -350,7 +353,7 @@ int resize(int event_type, const EmscriptenUiEvent* ui_event, void* user_data) {
 
 // helper functions
 WGPUSwapChain create_swapchain() {
-    WGPUSurface surface = wgpuInstanceCreateSurface(NULL, &(WGPUSurfaceDescriptor){
+    WGPUSurface surface = wgpuInstanceCreateSurface(state.wgpu.instance, &(WGPUSurfaceDescriptor){
         .nextInChain = (WGPUChainedStruct*)(&(WGPUSurfaceDescriptorFromCanvasHTMLSelector){
             .chain.sType = WGPUSType_SurfaceDescriptorFromCanvasHTMLSelector,
             .selector = state.canvas.name,
@@ -369,7 +372,7 @@ WGPUSwapChain create_swapchain() {
 WGPUShaderModule create_shader(const char* code, const char* label) {
     WGPUShaderModuleWGSLDescriptor wgsl = {
         .chain.sType = WGPUSType_ShaderModuleWGSLDescriptor,
-        .source = code,
+        .code = code,
     };
 
     return wgpuDeviceCreateShaderModule(state.wgpu.device, &(WGPUShaderModuleDescriptor){
