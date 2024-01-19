@@ -2,7 +2,7 @@
 <div align="center">
 <h1>webgpu-wasm-c</h1>
 
-<p>A minimal WebGPU 3d example written in C, compiled to WebAssembly (wasm).</p>
+<p>A minimal WebGPU example written in C, compiled to WebAssembly (wasm).</p>
 
 <img src="screen.png"/>
   
@@ -50,7 +50,7 @@ Launch a web server to run example before open it to WebGPU compatible web brows
 
 e.g. : launch `python3 -m http.server` and open web browser to `localhost:8000`.
 
-**TIP**: Use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in Visual Studio Code to open the HTML file. This extension will update automatically page in real-time when you rebuild the example.
+> [!TIP] Use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in Visual Studio Code to open the HTML file. This extension will update automatically page in real-time when you rebuild the example.
 
 ## Prerequisites
 
