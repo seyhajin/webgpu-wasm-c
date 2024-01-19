@@ -50,7 +50,8 @@ Launch a web server to run example before open it to WebGPU compatible web brows
 
 e.g. : launch `python3 -m http.server` and open web browser to `localhost:8000`.
 
-> [!TIP] Use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in Visual Studio Code to open the HTML file. This extension will update automatically page in real-time when you rebuild the example.
+> [!TIP] 
+> Use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in Visual Studio Code to open the HTML file. This extension will update automatically page in real-time when you rebuild the example.
 
 ## Prerequisites
 
