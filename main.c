@@ -9,7 +9,7 @@
 //--------------------------------------------------
 // defines
 //--------------------------------------------------
-#define CODE(...) #__VA_ARGS__
+#define SHADER_SOURCE(...) #__VA_ARGS__
 
 //--------------------------------------------------
 // structs
@@ -64,7 +64,7 @@ static WGPUBuffer       create_buffer(const void* data, size_t size, WGPUBufferU
 //--------------------------------------------------
 
 // triangle shader
-static const char* wgsl_triangle = CODE(
+static const char* wgsl_triangle = SHADER_SOURCE(
     // attribute/uniform decls
 
     struct VertexIn {
