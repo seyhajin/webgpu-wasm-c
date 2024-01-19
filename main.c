@@ -133,7 +133,7 @@ int main(int argc, const char* argv[]) {
     WGPUShaderModule shader_triangle = create_shader(wgsl_triangle, NULL);
 
     // describe buffer layouts
-    WGPUVertexAttribute vertex_attrib[2] = {
+    WGPUVertexAttribute vertex_attributes[2] = {
         // position: x, y
         [0] = {
             .format = WGPUVertexFormat_Float32x2,
@@ -150,7 +150,7 @@ int main(int argc, const char* argv[]) {
     WGPUVertexBufferLayout vertex_buffer_layout = {
         .arrayStride = 5 * sizeof(float),
         .attributeCount = 2,
-        .attributes = vertex_attrib,
+        .attributes = vertex_attributes,
     };
 
     // describe pipeline layout
