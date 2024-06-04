@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 // emscripten
 #include "emscripten.h"
@@ -303,7 +304,8 @@ void draw() {
             .view = back_buffer,
             .loadOp = WGPULoadOp_Clear,
             .storeOp = WGPUStoreOp_Store,
-            .clearValue = (WGPUColor){ 0.2f, 0.2f, 0.3f, 1.0f }
+            .clearValue = (WGPUColor){ 0.2f, 0.2f, 0.3f, 1.0f },
+            .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED
         },
     });
 
