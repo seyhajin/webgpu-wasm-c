@@ -126,7 +126,7 @@ int main(int argc, const char* argv[]) {
     state.wgpu.queue = wgpuDeviceGetQueue(state.wgpu.device);
 
     resize(0, NULL, NULL); // set size and create swapchain
-    emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, false, resize);
+    emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, false, (em_ui_callback_func)resize);
 
     //-----------------
     // setup pipeline
