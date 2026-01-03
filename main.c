@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h> // strlen
 
 // emscripten
 #include "emscripten.h"
 #include "emscripten/html5.h"
-#include "emscripten/html5_webgpu.h"
 #include "webgpu/webgpu.h"
 
 //--------------------------------------------------
@@ -29,7 +29,7 @@ typedef struct state_t {
         WGPUInstance instance;
         WGPUDevice device;
         WGPUQueue queue;
-        WGPUSwapChain swapchain;
+        WGPUSurface surface;
         WGPURenderPipeline pipeline;
     } wgpu;
 
@@ -54,12 +54,13 @@ static state_t state;
 
 // callbacks
 static int  resize(int, const EmscriptenUiEvent*, void*);
-static void draw();
+static void frame();
 
 // helper functions
-static WGPUSwapChain    create_swapchain();
+static void             create_surface();
 static WGPUShaderModule create_shader(const char* code, const char* label);
 static WGPUBuffer       create_buffer(const void* data, size_t size, WGPUBufferUsage usage);
+static WGPUStringView   make_stringview(const char* str);
 
 //--------------------------------------------------
 // vertex and fragment shaders
@@ -125,7 +126,7 @@ int main(int argc, const char* argv[]) {
     state.wgpu.device = emscripten_webgpu_get_device();
     state.wgpu.queue = wgpuDeviceGetQueue(state.wgpu.device);
 
-    resize(0, NULL, NULL); // set size and create swapchain
+    resize(0, NULL, NULL); // set size and create surface
     emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, false, (em_ui_callback_func)resize);
 
     //-----------------
@@ -181,7 +182,7 @@ int main(int argc, const char* argv[]) {
         // vertex state
         .vertex = {
             .module = shader_triangle,
-            .entryPoint = "vs_main",
+            .entryPoint = make_stringview("vs_main"),
             .bufferCount = 1,
             .buffers = &vertex_buffer_layout,
         },
@@ -195,7 +196,7 @@ int main(int argc, const char* argv[]) {
         // fragment state
         .fragment = &(WGPUFragmentState){
             .module = shader_triangle,
-            .entryPoint = "fs_main",
+            .entryPoint = make_stringview("fs_main"),
             .targetCount = 1,
             // color target state
             .targets = &(WGPUColorTargetState){
@@ -268,14 +269,14 @@ int main(int argc, const char* argv[]) {
     // main loop
     //-----------------
 
-    emscripten_set_main_loop(draw, 0, 1);
+    emscripten_set_main_loop(frame, 0, 1);
 
     //-----------------
     // quit
     //-----------------
 
     wgpuRenderPipelineRelease(state.wgpu.pipeline);
-    wgpuSwapChainRelease(state.wgpu.swapchain);
+    wgpuSurfaceRelease(state.wgpu.surface);
     wgpuQueueRelease(state.wgpu.queue);
     wgpuDeviceRelease(state.wgpu.device);
     wgpuInstanceRelease(state.wgpu.instance);
@@ -283,15 +284,17 @@ int main(int argc, const char* argv[]) {
     return 0;
 }
 
-// draw callback
-void draw() {
+// frame callback
+void frame() {
     // update rotation
     state.var.rot += 0.1f;
     state.var.rot = state.var.rot >= 360.f ? 0.0f : state.var.rot;
     wgpuQueueWriteBuffer(state.wgpu.queue, state.res.ubuffer, 0, &state.var.rot, sizeof(state.var.rot));
 
-    // create texture view
-    WGPUTextureView back_buffer = wgpuSwapChainGetCurrentTextureView(state.wgpu.swapchain);
+    // create surface texture view
+    WGPUSurfaceTexture surface_texture;
+    wgpuSurfaceGetCurrentTexture(state.wgpu.surface, &surface_texture);
+    WGPUTextureView back_buffer = wgpuTextureCreateView(surface_texture.texture, NULL);
 
     // create command encoder
     WGPUCommandEncoder cmd_encoder = wgpuDeviceCreateCommandEncoder(state.wgpu.device, NULL);
@@ -330,6 +333,7 @@ void draw() {
     wgpuCommandEncoderRelease(cmd_encoder);
     wgpuCommandBufferRelease(cmd_buffer);
     wgpuTextureViewRelease(back_buffer);
+    wgpuTextureRelease(surface_texture.texture);
 }
 
 // resize callback
@@ -343,38 +347,40 @@ int resize(int event_type, const EmscriptenUiEvent* ui_event, void* user_data) {
     state.canvas.height = (int)h;
     emscripten_set_canvas_element_size(state.canvas.name, state.canvas.width, state.canvas.height);
 
-    if (state.wgpu.swapchain) {
-        wgpuSwapChainRelease(state.wgpu.swapchain);
-        state.wgpu.swapchain = NULL;
+    if (state.wgpu.surface) {
+        wgpuSurfaceRelease(state.wgpu.surface);
+        state.wgpu.surface = NULL;
     }
-
-    state.wgpu.swapchain = create_swapchain();
+    
+    create_surface();
 
     return 1;
 }
 
 // helper functions
-WGPUSwapChain create_swapchain() {
-    WGPUSurface surface = wgpuInstanceCreateSurface(state.wgpu.instance, &(WGPUSurfaceDescriptor){
-        .nextInChain = (WGPUChainedStruct*)(&(WGPUSurfaceDescriptorFromCanvasHTMLSelector){
-            .chain.sType = WGPUSType_SurfaceDescriptorFromCanvasHTMLSelector,
-            .selector = state.canvas.name,
+void create_surface() {
+    state.wgpu.surface = wgpuInstanceCreateSurface(state.wgpu.instance, &(WGPUSurfaceDescriptor){
+        .nextInChain = (WGPUChainedStruct*)(&(WGPUEmscriptenSurfaceSourceCanvasHTMLSelector){
+            .chain.sType = WGPUSType_EmscriptenSurfaceSourceCanvasHTMLSelector,
+            .selector = make_stringview(state.canvas.name),
         })
     });
 
-    return wgpuDeviceCreateSwapChain(state.wgpu.device, surface, &(WGPUSwapChainDescriptor){
-        .usage = WGPUTextureUsage_RenderAttachment,
+    wgpuSurfaceConfigure(state.wgpu.surface, &(WGPUSurfaceConfiguration){
+        .device = state.wgpu.device,
         .format = WGPUTextureFormat_BGRA8Unorm,
+        .usage = WGPUTextureUsage_RenderAttachment,
         .width = state.canvas.width,
         .height = state.canvas.height,
         .presentMode = WGPUPresentMode_Fifo,
+        .alphaMode = WGPUCompositeAlphaMode_Auto,
     });
 }
 
 WGPUShaderModule create_shader(const char* code, const char* label) {
-    WGPUShaderModuleWGSLDescriptor wgsl = {
-        .chain.sType = WGPUSType_ShaderModuleWGSLDescriptor,
-        .code = code,
+    WGPUShaderSourceWGSL wgsl = {
+        .chain.sType = WGPUSType_ShaderSourceWGSL,
+        .code = make_stringview(code),
     };
 
     return wgpuDeviceCreateShaderModule(state.wgpu.device, &(WGPUShaderModuleDescriptor){
@@ -390,4 +396,13 @@ WGPUBuffer create_buffer(const void* data, size_t size, WGPUBufferUsage usage) {
     });
     wgpuQueueWriteBuffer(state.wgpu.queue, buffer, 0, data, size);
     return buffer;
+}
+
+WGPUStringView make_stringview(const char* str) {
+    WGPUStringView res = {0};
+    if (str) {
+        res.data = str;
+        res.length = strlen(str);
+    }
+    return res;
 }

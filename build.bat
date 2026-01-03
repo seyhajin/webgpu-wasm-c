@@ -2,7 +2,7 @@
 
 #linux & macos
 
-emcc main.c -o webgpu.html --shell-file shell.html -s USE_WEBGPU=1
+emcc main.c -o webgpu.html --shell-file shell.html --use-port=emdawnwebgpu
 
 exit
 
@@ -11,6 +11,6 @@ exit
 
 @echo off
 
-emcc main.c -o webgpu.html --shell-file shell.html -s USE_WEBGPU=1
+emcc main.c -o webgpu.html --shell-file shell.html --use-port=emdawnwebgpu
 
 exit /b

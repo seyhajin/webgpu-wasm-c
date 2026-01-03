@@ -41,7 +41,7 @@ sh build.bat
 Alternatively, type the below command to build example (all platforms):
 
 ```bash
-emcc main.c -o webgpu.html --shell-file shell.html -s -USE_WEBGPU=1
+emcc main.c -o webgpu.html --shell-file shell.html --use-port=emdawnwebgpu
 ```
 
 ### Run
@@ -55,7 +55,7 @@ e.g. : launch `python3 -m http.server` and open web browser to `localhost:8000`.
 
 ## Prerequisites
 
-* [emscripten](https://emscripten.org)
+* [emscripten](https://emscripten.org) 4.0.22+
 * git (optional)
 * python3 (optional)
 
