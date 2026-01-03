@@ -62,11 +62,17 @@
             // Set WebGPU device in Module
             Module.preinitializedWebGPUDevice = device;
 
+            // Ensures proper synchronization of the “webgpu.js” script after the device request.
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = 'webgpu.js';
+            document.body.appendChild(script);
+
             return true;
         }
 
         initWebGPU();
     </script>
-    {{{ SCRIPT }}}
+    <!--{{{ SCRIPT }}}-->
 </body>
 </html>
